@@ -19,7 +19,7 @@ Of course, this is just my advice...go nuts. :D
 You can import fonts from Google Fonts here.
 https://fonts.google.com/
 */
-@import url('https://fonts.googleapis.com/css2?family=Afacad+Flux:wght@100..1000&display=swap');
+
 
 /*
 Global styles for the overlay
@@ -31,7 +31,7 @@ Global styles for the overlay
   --color-quaternary: #c4c4c4;
   --color-quinary: #ff4800;
 
-  --font-primary: 'Afacad Flux', sans-serif;
+  --font-primary: 'Bahnschrift', 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
 }
 
 /*

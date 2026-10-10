@@ -8,6 +8,7 @@ import OverlayChatWidgetView from './widgets/OverlayChatWidgetView.vue';
 import OverlayGuestsWidgetView from './widgets/OverlayGuestsWidgetView.vue';
 import OverlayGamepadsWidgetView from './widgets/OverlayGamepadsWidgetView.vue';
 import OverlayWebcamWidgetView from './widgets/OverlayWebcamWidgetView.vue';
+import OverlayTickerWidgetView from './widgets/OverlayTickerWidgetView.vue';
 import OverlayWidgetView from './OverlayWidgetView.vue';
 
 const overlayStore = useOverlayStore();
@@ -18,6 +19,7 @@ const chatWidget = computed(() => overlayStore.findWidgetByName('chat'));
 const guestsWidget = computed(() => overlayStore.findWidgetByName('guests'));
 const gamepadsWidget = computed(() => overlayStore.findWidgetByName('gamepads'));
 const webcamWidget = computed(() => overlayStore.findWidgetByName('webcam'));
+const tickerWidget = computed(() => overlayStore.findWidgetByName('ticker'));
 
 const overlayStyle = computed(() => ({
     opacity: configStore.app.overlay.opacity,
@@ -32,6 +34,7 @@ onMounted(() => {
     <div id="app" class="overlay" :style="overlayStyle">
         <OverlayChatWidgetView v-if="chatWidget?.enabled" :widget="chatWidget" />
         <OverlayGuestsWidgetView v-if="guestsWidget?.enabled" :widget="guestsWidget" />
+        <OverlayTickerWidgetView v-if="tickerWidget?.enabled" :widget="tickerWidget" />
         <OverlayGamepadsWidgetView v-if="gamepadsWidget?.enabled" :widget="gamepadsWidget" />
         <OverlayWebcamWidgetView v-if="webcamWidget?.enabled" :widget="webcamWidget" />
 

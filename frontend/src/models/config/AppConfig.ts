@@ -4,14 +4,14 @@ export default class AppConfig {
     // Group of overlay configurations
     overlay = {
         theme: 'default',
-        opacity: 0.9,
+        opacity: 0.96,
         zoom: .5,
         display: 0,
         widgets: {
             default: {
                 "chat": {
                     enabled: true,
-                    position: { position: 'top-left', x: 0, y: 0, w: 400, h: 200, autoHeight: true, minHeight: 200 },
+                    position: { position: 'bottom-left', x: 0, y: 0, w: 380, h: 120, autoHeight: true, minHeight: 40 },
                     cfg: {
                         showHistory: true,
                         showTimestamps: true,
@@ -20,13 +20,22 @@ export default class AppConfig {
                 },
                 "guests": {
                     enabled: true,
-                    position: { position: 'top-right', x: 0, y: 0, w: 250, h: 32, autoHeight: true, minHeight: 32 },
+                    position: { position: 'top-right', x: 0, y: 0, w: 220, h: 28, autoHeight: true, minHeight: 28 },
                     cfg: {
-                        showLatency: true
+                        showLatency: true,
+                        alwaysOpen: false
+                    }
+                },
+                "ticker": {
+                    enabled: true,
+                    position: { position: 'top-center', x: 0, y: 0, w: 520, h: 30, minHeight: 30, autoHeight: true },
+                    cfg: {
+                        showSec: 9,
+                        everySec: 90
                     }
                 },
                 "gamepads": {
-                    enabled: true,
+                    enabled: false,
                     position: { position: 'bottom-center', x: 0, y: 0, w: 100, h: 100, autoWidth: true, autoHeight: true },
                     cfg: {
                         showHotseatTime: true

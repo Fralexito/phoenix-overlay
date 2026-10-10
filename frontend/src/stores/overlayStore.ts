@@ -13,7 +13,9 @@ import ChatWidget from '@/models/widgets/ChatWidget';
 import GuestsWidget from '@/models/widgets/GuestsWidget';
 import GamepadsWidget from '@/models/widgets/GamepadsWidget';
 import WebcamWidget from '@/models/widgets/WebcamWidget';
+import TickerWidget from '@/models/widgets/TickerWidget';
 import RegistryDialog from '@/components/overlay/config/RegistryDialog.vue';
+import AppConfig from '@/models/config/AppConfig';
 
 import User from '@/models/User';
 import ChatMessage from '@/models/chat/ChatMessage';
@@ -35,6 +37,11 @@ export const useOverlayStore = defineStore('overlayStore', () => {
      * Guests in the room.
      */
     const guests = ref<User[]>([]);
+
+    /**
+     * Noticias de "última hora" que manda Phoenix Link (máximo 5).
+     */
+    const ticker = ref<{ id: string | number; texto: string; nivel: string }[]>([]);
 
     /**
      * The widgets to be displayed on the overlay.
@@ -127,6 +134,28 @@ export const useOverlayStore = defineStore('overlayStore', () => {
             const message = new ChatMessage();
             message.type = 'log';
             message.content = data.message;
+            message.createdAt = new Date();
+            message.createdAtFormatted = message.formatCreatedAt();
+            addChatMessage(message);
+        })
+
+        // Phoenix: última hora de la liga
+        window.$eventBus.on('phoenix:ticker', (data: any) => {
+            const items = Array.isArray(data?.items) ? data.items : [];
+            ticker.value = items
+                .filter((i: any) => i && i.texto)
+                .slice(0, 5)
+                .map((i: any) => ({ id: i.id ?? i.texto, texto: String(i.texto), nivel: i.nivel === 'urgente' || i.nivel === 'importante' ? i.nivel : 'info' }));
+        })
+
+        // Phoenix: mensajes del chat general de la liga (el mismo de la web)
+        window.$eventBus.on('phoenix:chatgeneral', (data: any) => {
+            if (!data?.texto) return;
+            const message = new ChatMessage();
+            message.type = 'general';
+            message.user.id = data.id ?? -1;
+            message.user.name = data.nombre || '';
+            message.content = String(data.texto);
             message.createdAt = new Date();
             message.createdAtFormatted = message.formatCreatedAt();
             addChatMessage(message);
@@ -497,7 +526,17 @@ export const useOverlayStore = defineStore('overlayStore', () => {
             //     }
             // });
 
-            widgets.value = [chatWidget, guestsWidget, gamepadsWidget];
+            // La franja de última hora es nueva: una configuración guardada antes no la trae
+            const tickerCfg = (configStore.app.overlay.widgets.default as any).ticker
+                ?? ((configStore.app.overlay.widgets.default as any).ticker = new AppConfig().overlay.widgets.default.ticker);
+            const tickerWidget = new TickerWidget();
+            Object.assign(tickerWidget, {
+                enabled: tickerCfg.enabled,
+                position: { ...tickerWidget.position, ...(tickerCfg.position as any) },
+                cfg: { ...tickerWidget.cfg, ...tickerCfg.cfg }
+            });
+
+            widgets.value = [chatWidget, guestsWidget, tickerWidget, gamepadsWidget];
 
             // Enable webcam?
             // if (configStore.app.overlay.widgets.default.webcam.enabled) {
@@ -509,7 +548,7 @@ export const useOverlayStore = defineStore('overlayStore', () => {
         } catch (error) {
             console.warn('Failed to apply widget config, resetting to defaults.', error);
             configStore.resetConfig();
-            widgets.value = [new ChatWidget(), new GuestsWidget(), new GamepadsWidget()];
+            widgets.value = [new ChatWidget(), new GuestsWidget(), new TickerWidget(), new GamepadsWidget()];
         }
     }
 
@@ -574,6 +613,7 @@ export const useOverlayStore = defineStore('overlayStore', () => {
         locked,
         user,
         guests,
+        ticker,
         pads,
         interactable,
         init

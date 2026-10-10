@@ -80,8 +80,8 @@ func main() {
 	}()
 
 	app := application.New(application.Options{
-		Name:        "Smash Glass",
-		Description: "Smash Soda Overlay",
+		Name:        "Phoenix Overlay",
+		Description: "Overlay de Phoenix Link",
 		Services: []application.Service{
 			application.NewService(windowService),
 			application.NewService(hotkeyService),
@@ -110,7 +110,7 @@ func main() {
 	width, height := windowService.GetResolution()
 
 	window := app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title: "Smash Glass",
+		Title: "Phoenix Overlay",
 		Mac: application.MacWindow{
 			InvisibleTitleBarHeight: 50,
 			Backdrop:                application.MacBackdropTranslucent,

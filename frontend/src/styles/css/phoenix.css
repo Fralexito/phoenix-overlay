@@ -1,0 +1,158 @@
+/* ==========================================================================
+   Phoenix Overlay · estilo propio
+   Idea: lo que se ve encima de un partido tiene que acompañar, no estorbar.
+   - Todo es pequeño, oscuro y con poca luz; sin cajas grandes.
+   - Lo importante (ping malo, noticia urgente) se nota por color y movimiento suave.
+   - Lo que va bien se encoge o desaparece solo.
+   ========================================================================== */
+:root {
+  --color-primary: #0a0f26;
+  --color-secondary: #e9efff;
+  --color-tertiary: #19e6ff;
+  --color-quaternary: #8b95b8;
+  --color-quinary: #ff4d6d;
+
+  --ph-ok: #3be58b;
+  --ph-mid: #ffb02e;
+  --ph-bad: #ff4d6d;
+  --ph-violet: #a678ff;
+  --ph-glass: linear-gradient(180deg, rgba(12, 18, 44, .84), rgba(8, 12, 30, .76));
+  --ph-line: rgba(25, 230, 255, .20);
+}
+
+#app { font-size: 14px; letter-spacing: .01em; }
+
+/* Panel genérico (lo usan chat, gamepads y plugins) */
+.panel {
+  background: var(--ph-glass);
+  border: 1px solid var(--ph-line);
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 15px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, .38);
+  color: var(--color-secondary);
+}
+.guest { color: var(--color-tertiary); font-weight: 600; }
+
+/* ---------- Ping de la sala ---------- */
+.ping-rail { display: flex; justify-content: flex-end; width: 100%; }
+.ping-chip, .ping-row {
+  --c: var(--color-quaternary);
+  color: var(--c);
+}
+.ping-chip.ok, .ping-row.ok { --c: var(--ph-ok); }
+.ping-chip.mid, .ping-row.mid { --c: var(--ph-mid); }
+.ping-chip.bad, .ping-row.bad { --c: var(--ph-bad); }
+
+.ping-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 3px 11px 3px 9px;
+  border-radius: 999px;
+  background: rgba(8, 12, 30, .55);
+  border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
+  font-variant-numeric: tabular-nums;
+  font-size: 14px; font-weight: 600;
+  opacity: .78;
+  animation: ph-fade .4s ease both;
+}
+.ping-chip small, .ping-row small { font-size: .72em; opacity: .7; margin-left: 2px; font-weight: 500; }
+
+.ping-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--c); box-shadow: 0 0 8px var(--c);
+  flex: none;
+}
+.bad .ping-dot { animation: ph-pulse 1.1s ease-in-out infinite; }
+
+.ping-list {
+  display: flex; flex-direction: column; gap: 3px;
+  width: 210px; padding: 7px 10px 8px;
+  background: var(--ph-glass);
+  border: 1px solid var(--ph-line);
+  border-radius: 10px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, .38);
+  animation: ph-drop .3s cubic-bezier(.2, .8, .2, 1) both;
+}
+.ping-row {
+  position: relative;
+  display: grid; grid-template-columns: 10px 1fr auto; align-items: center; column-gap: 8px;
+  font-size: 14px; padding: 2px 0 5px;
+  font-variant-numeric: tabular-nums;
+}
+.ping-name { color: var(--color-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.ping-ms { font-weight: 700; }
+.ping-bar {
+  grid-column: 1 / -1; display: block; height: 2px; border-radius: 2px;
+  background: rgba(255, 255, 255, .08); overflow: hidden; margin-top: 3px;
+}
+.ping-bar u { display: block; height: 100%; background: var(--c); text-decoration: none; transition: width .5s ease; }
+
+/* ---------- Última hora ---------- */
+.ticker {
+  --c: var(--color-tertiary);
+  display: flex; align-items: center; gap: 12px;
+  max-width: 100%;
+  padding: 5px 14px 5px 12px;
+  background: var(--ph-glass);
+  border: 1px solid color-mix(in srgb, var(--c) 30%, transparent);
+  border-left: 3px solid var(--c);
+  border-radius: 8px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, .38);
+  animation: ph-drop .45s cubic-bezier(.2, .8, .2, 1) both;
+}
+.ticker.nv-importante { --c: var(--ph-mid); }
+.ticker.nv-urgente { --c: var(--ph-bad); animation: ph-drop .45s cubic-bezier(.2, .8, .2, 1) both, ph-glow 2.4s ease-in-out .5s infinite; }
+.tk-tag {
+  display: inline-flex; align-items: center; gap: 7px; flex: none;
+  color: var(--c); font-size: 11px; font-weight: 800; letter-spacing: .18em;
+}
+.tk-tag i { width: 6px; height: 6px; border-radius: 50%; background: var(--c); box-shadow: 0 0 8px var(--c); }
+.tk-text { font-size: 15px; color: var(--color-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.tk-n { flex: none; font-size: 11px; color: var(--color-quaternary); font-variant-numeric: tabular-nums; }
+
+/* ---------- Chat: avisos que se apagan solos ---------- */
+#widget-chat .chat-bubbles { display: flex; flex-direction: column-reverse; gap: 6px; }
+.message-bubble {
+  font-size: 15px;
+  padding: 6px 12px 6px 10px;
+  border-radius: 8px;
+  border-left: 3px solid var(--color-tertiary);
+  margin-bottom: 0 !important;
+}
+.message-bubble.general { border-left-color: var(--ph-violet); }
+.message-bubble.log { border-left-color: var(--color-quaternary); font-size: 13px; padding-top: 4px; padding-bottom: 4px; }
+.message-bubble.enter { animation: ph-slide .35s cubic-bezier(.2, .8, .2, 1) forwards; }
+.message-bubble.leave { animation: ph-out .6s ease forwards; }
+.message-guest { font-weight: 700; color: var(--color-tertiary); margin-right: 8px; }
+.message-bubble.general .message-guest { color: var(--ph-violet); }
+.msg-tag {
+  flex: none; margin-right: 8px; padding: 1px 6px; border-radius: 4px;
+  font-size: 9px; font-weight: 800; letter-spacing: .16em;
+  color: #0a0f26; background: var(--ph-violet);
+}
+.message-time { color: var(--color-quaternary); font-size: .75em; }
+.chat-input {
+  font-family: var(--font-primary); font-size: 16px;
+  background: rgba(8, 12, 30, .92); color: var(--color-secondary);
+  border: 1px solid var(--ph-line); border-radius: 8px; padding: 8px 12px; outline: none;
+}
+.chat-input:focus { border-color: var(--color-tertiary); box-shadow: 0 0 0 3px rgba(25, 230, 255, .15); }
+.message-history { border-radius: 10px; }
+
+/* ---------- Gamepads (apagados por defecto) ---------- */
+.gamepad { fill: var(--color-quaternary); }
+.gamepad-btn-pressed { fill: var(--color-tertiary); }
+
+/* ---------- Movimiento ---------- */
+@keyframes ph-fade { from { opacity: 0; } to { opacity: .78; } }
+@keyframes ph-drop { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@keyframes ph-slide { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: none; } }
+@keyframes ph-out { from { opacity: 1; } to { opacity: 0; transform: translateX(-8px); } }
+@keyframes ph-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.45); opacity: .55; } }
+@keyframes ph-glow {
+  0%, 100% { box-shadow: 0 6px 22px rgba(0, 0, 0, .38), 0 0 0 rgba(255, 77, 109, 0); }
+  50% { box-shadow: 0 6px 22px rgba(0, 0, 0, .38), 0 0 18px rgba(255, 77, 109, .45); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticker, .ping-list, .ping-chip, .message-bubble { animation: none !important; }
+}

@@ -9,7 +9,7 @@ export default class ChatWidget extends OverlayWidget {
 
     active: boolean = false;
 
-    position: Position = { position: 'top-left', x: 0, y: 0, w: 400, h: 200, autoHeight: true, minHeight: 200 };
+    position: Position = { position: 'bottom-left', x: 0, y: 0, w: 380, h: 120, autoHeight: true, minHeight: 40 };
 
     cfg = {
         showHistory: true,

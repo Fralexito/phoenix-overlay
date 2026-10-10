@@ -81,22 +81,24 @@ export default class OverlayWidget {
             if (!allowed.has(position)) position = 'top-center';
         }
 
+        // Margen para no pegar los avisos al borde de la pantalla
+        const M = 16;
         switch (position) {
             case 'top-left':
-                x = 0;
-                y = 0;
+                x = M;
+                y = M;
                 break;
             case 'top-right':
-                x = viewportW - w;
-                y = 0;
+                x = viewportW - w - M;
+                y = M;
                 break;
             case 'bottom-left':
-                x = 0;
-                y = viewportH - h;
+                x = M;
+                y = viewportH - h - M;
                 break;
             case 'bottom-right':
-                x = viewportW - w;
-                y = viewportH - h;
+                x = viewportW - w - M;
+                y = viewportH - h - M;
                 break;
             case 'center':
                 x = (viewportW - w) / 2;
@@ -104,11 +106,11 @@ export default class OverlayWidget {
                 break;
             case 'top-center':
                 x = (viewportW - w) / 2;
-                y = 0;
+                y = M;
                 break;
             case 'bottom-center':
                 x = (viewportW - w) / 2;
-                y = viewportH - h;
+                y = viewportH - h - M;
                 break;
             case 'custom':
                 break;

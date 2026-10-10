@@ -64,7 +64,7 @@ onBeforeUnmount(() => {
                     ref="inputRef" 
                     class="chat-input" 
                     type="text" 
-                    placeholder="Type a message..." 
+                    placeholder="Escribe un mensaje…" 
                     @keyup.enter="sendMessage"
                     @blur="onBlur"
                     />
@@ -72,6 +72,7 @@ onBeforeUnmount(() => {
 
                 <div v-if="widget.active && widget.cfg.showHistory" class="message-history panel">
                     <div v-for="message in overlayStore.chatMessages" class="chat-message message">
+                        <span v-if="message.type === 'general'" class="msg-tag">GENERAL</span>
                         <span v-if="message.type !== 'log'" class="message-guest">{{ message.user.name }}</span>
                         <span class="message-text" :class="{muted: message.type == 'log'}">{{ message.content }}</span>
                         <span class="message-time" v-if="widget.cfg.showTimestamps">{{ message.createdAtFormatted }}</span>
@@ -79,10 +80,10 @@ onBeforeUnmount(() => {
                 </div>
 
                 <div v-if="!widget.active" class="chat-bubbles">
-                    <div v-for="message in overlayStore.chatBubbles" class="chat-bubble message-bubble panel" :class="{enter: !message.exit, leave: message.exit}">
+                    <div v-for="message in overlayStore.chatBubbles.slice(0, 4)" :key="message.id" class="chat-bubble message-bubble panel" :class="[message.type, {enter: !message.exit, leave: message.exit}]">
+                        <span v-if="message.type === 'general'" class="msg-tag">GENERAL</span>
                         <span v-if="message.type !== 'log'" class="message-guest">{{ message.user.name }}</span>
                         <span class="message-text" :class="{muted: message.type == 'log'}">{{ message.content }}</span>
-                        <span class="message-time" v-if="widget.cfg.showTimestamps">{{ message.createdAtFormatted }}</span>
                     </div>
                 </div>
             </div>

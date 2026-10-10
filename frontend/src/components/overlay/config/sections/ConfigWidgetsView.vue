@@ -116,35 +116,35 @@ onMounted(async () => {
 </script>
 <template>
     <div class="config-widgets">
-        <AppDrawer title="Chat" startOpen>
+        <AppDrawer title="Chat y avisos" startOpen>
             <FormSelect
-            label="Position"
+            label="Posición"
             name="chatPosition"
             :value="(configStore.app.overlay.widgets.default['chat'].position.position)"
             :options="positions"
             @oninput="setWidgetPosition('chat', $event)"
             />
             <FormToggle 
-            label="Enabled"
+            label="Activado"
             :value="configStore.app.overlay.widgets.default['chat'].enabled"
             @oninput="setWidgetProp('chat', 'enabled', $event)"
             name="chatEnabled"
             />
             <FormToggle 
-            label="Show Timestamps"
+            label="Mostrar la hora"
             :value="configStore.app.overlay.widgets.default['chat'].cfg.showTimestamps"
             @oninput="setWidgetConfig('chat', 'showTimestamps', $event)"
             name="showTimestamps"
             />
             <FormToggle 
-            label="Show Message History"
+            label="Mostrar el historial al escribir"
             :value="configStore.app.overlay.widgets.default['chat'].cfg.showHistory"
             @oninput="setWidgetConfig('chat', 'showHistory', $event)"
             name="chatShowHistory"
             />
         </AppDrawer>
 
-        <AppDrawer title="Guests" startOpen>
+        <AppDrawer title="Ping de la sala" startOpen>
             <FormSelect
             label="Position"
             name="chatPosition"
@@ -159,14 +159,36 @@ onMounted(async () => {
             name="guestsEnabled"
             />
             <FormToggle 
-            label="Show Latency"
+            label="Mostrar los ms"
             :value="configStore.app.overlay.widgets.default['guests'].cfg.showLatency"
             @oninput="setWidgetConfig('guests', 'showLatency', $event)"
             name="showLatency"
             />
+            <FormToggle 
+            label="Mostrar siempre la lista (si no, se encoge cuando todos van bien)"
+            :value="!!configStore.app.overlay.widgets.default['guests'].cfg.alwaysOpen"
+            @oninput="setWidgetConfig('guests', 'alwaysOpen', $event)"
+            name="alwaysOpen"
+            />
         </AppDrawer>
 
-        <AppDrawer title="Gamepads" startOpen>
+        <AppDrawer title="Última hora" startOpen>
+            <FormSelect
+            label="Posición"
+            name="tickerPosition"
+            :value="(configStore.app.overlay.widgets.default['ticker'].position.position)"
+            :options="positions"
+            @oninput="setWidgetPosition('ticker', $event)"
+            />
+            <FormToggle 
+            label="Activada"
+            :value="configStore.app.overlay.widgets.default['ticker'].enabled"
+            @oninput="setWidgetProp('ticker', 'enabled', $event)"
+            name="tickerEnabled"
+            />
+        </AppDrawer>
+
+        <AppDrawer title="Mandos (opcional)">
             <FormSelect
             label="Position"
             name="chatPosition"

@@ -7,10 +7,11 @@ export default class GuestsWidget extends OverlayWidget {
     
     enabled: boolean = true;
 
-    position: Position = { position: 'top-right', x: 0, y: 0, w: 250, h: 32, autoHeight: true, minHeight: 32 };
+    position: Position = { position: 'top-right', x: 0, y: 0, w: 220, h: 28, autoHeight: true, minHeight: 28 };
 
     cfg = {
-        showLatency: true
+        showLatency: true,
+        alwaysOpen: false   // false = se encoge a un solo punto cuando todos tienen buen ping
     };
 
 }

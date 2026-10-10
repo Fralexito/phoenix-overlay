@@ -6,7 +6,7 @@ export default class ChatMessage {
      */
     id: number;
 
-    type: 'chat'|'log' = 'chat';
+    type: 'chat'|'log'|'general' = 'chat';
 
     /**
      * The content of the message.
