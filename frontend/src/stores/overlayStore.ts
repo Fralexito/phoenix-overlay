@@ -186,7 +186,8 @@ export const useOverlayStore = defineStore('overlayStore', () => {
                 axes: pad.axes ?? [],
                 owner: pad.owner ? {
                     id: "",
-                    name: pad.owner.name
+                    name: pad.owner.name,
+                    hotseatTime: pad.owner.hotseatTime
                 } : null
             }));
         })

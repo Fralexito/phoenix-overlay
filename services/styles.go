@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type Theme struct {
@@ -200,7 +201,8 @@ func ensureThemeMeta(themeDir, themeID string) error {
 }
 
 func downloadThemeFile(url, filePath string) error {
-	resp, err := http.Get(url)
+	cliente := &http.Client{Timeout: 30 * time.Second}
+	resp, err := cliente.Get(url)
 	if err != nil {
 		return err
 	}
