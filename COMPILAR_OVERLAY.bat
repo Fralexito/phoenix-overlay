@@ -27,7 +27,7 @@ if not errorlevel 1 (
   wails3 generate syso -arch amd64 -icon build\windows\icon.ico -manifest build\windows\wails.exe.manifest -info build\windows\info.json -out wails_windows_amd64.syso >nul 2>nul
 )
 
-go build -trimpath -buildvcs=false -ldflags="-w -s -H windowsgui" -o bin\SmashGlass.exe .
+go build -trimpath -buildvcs=false -ldflags="-w -s -H windowsgui" -o bin\PhoenixGlass.exe .
 if errorlevel 1 (
   echo.
   echo  ERROR al compilar. Copia lo que dice arriba y mandaselo a Claude.
@@ -38,9 +38,9 @@ if errorlevel 1 (
 del /q *.syso >nul 2>nul
 
 echo.
-echo  Listo: %~dp0bin\SmashGlass.exe
+echo  Listo: %~dp0bin\PhoenixGlass.exe
 echo.
 echo  Para usarlo con Phoenix Link, copialo a la carpeta "overlay" del programa
-echo  ^(donde esta PhoenixLink.exe^). El nombre debe seguir siendo SmashGlass.exe.
+echo  ^(donde esta PhoenixLink.exe^). El archivo se llama PhoenixGlass.exe.
 echo.
 pause

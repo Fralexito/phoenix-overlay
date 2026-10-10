@@ -3,18 +3,19 @@ import { ref, onMounted } from 'vue';
 import { useConfigStore } from '@/stores/configStore';
 import { useOverlayStore } from '@/stores/overlayStore';
 import AppDrawer from '@/components/common/AppDrawer.vue';
+import AppConfig from '@/models/config/AppConfig';
 
 const overlayStore = useOverlayStore();
 const configStore = useConfigStore();
 const positions = [
-    { label: 'Top Left', value: 'top-left' },
-    { label: 'Top Right', value: 'top-right' },
-    { label: 'Bottom Left', value: 'bottom-left' },
-    { label: 'Bottom Right', value: 'bottom-right' },
-    { label: 'Top Center', value: 'top-center' },
-    { label: 'Bottom Center', value: 'bottom-center' },
-    { label: 'Center', value: 'center' },
-    { label: 'Custom', value: 'custom' },
+    { label: 'Arriba izquierda', value: 'top-left' },
+    { label: 'Arriba derecha', value: 'top-right' },
+    { label: 'Abajo izquierda', value: 'bottom-left' },
+    { label: 'Abajo derecha', value: 'bottom-right' },
+    { label: 'Arriba centro', value: 'top-center' },
+    { label: 'Abajo centro', value: 'bottom-center' },
+    { label: 'Centro', value: 'center' },
+    { label: 'Libre (arrastrado)', value: 'custom' },
 ];
 const mediaDevices = ref<{label: string, value: string}[]>([]);
 
@@ -110,12 +111,32 @@ function pressWidgetButton(widgetId: string|number, action: string) {
     window.$eventBus.emit(`plugin:button:${widgetId}`, action);
 }
 
+/** Devuelve cada widget a su lugar original. */
+function resetPositions() {
+    const base = new AppConfig().overlay.widgets.default as Record<string, any>;
+    for (const name of Object.keys(base)) {
+        const widget = overlayStore.findWidgetByName(name);
+        const saved = configStore.app.overlay.widgets.default[name];
+        if (!widget || !saved) continue;
+        const fresh = JSON.parse(JSON.stringify(base[name].position));
+        Object.assign(widget.position, fresh);
+        Object.assign(saved.position, fresh);
+    }
+}
+
 onMounted(async () => {
     await getMediaDevices();
 })
 </script>
 <template>
     <div class="config-widgets">
+        <AppDrawer title="Mover widgets" startOpen>
+            <p style="margin:0 0 8px;opacity:.85;line-height:1.4">
+                Pulsa <b>Ctrl + Alt + M</b> para entrar al modo mover: arrastra cada cuadro con el mouse y cambia su tamaño desde las esquinas.
+                Vuelve a pulsar la misma combinación para guardar. También puedes elegir una posición fija en cada widget.
+            </p>
+            <button type="button" @click="resetPositions" style="padding:6px 12px;cursor:pointer">Restablecer posiciones</button>
+        </AppDrawer>
         <AppDrawer title="Chat y avisos" startOpen>
             <FormSelect
             label="Posición"

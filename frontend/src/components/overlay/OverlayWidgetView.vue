@@ -265,6 +265,7 @@ onBeforeUnmount(() => {
         <div class="widget-content" ref="contentRef">
             <slot />
         </div>
+        <div v-if="overlayStore.interactable" class="move-tag">{{ widget.name }}</div>
 
         <div class="resize-handle top-left" @mousedown.stop="startResize('top-left', $event)" />
         <div class="resize-handle top-right" @mousedown.stop="startResize('top-right', $event)" />
@@ -295,6 +296,20 @@ onBeforeUnmount(() => {
     &.locked {
         cursor: default;
     }
+}
+
+.move-tag {
+    position: absolute;
+    top: -16px;
+    left: 0;
+    padding: 1px 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: #ffae00;
+    color: #111;
+    pointer-events: none;
+    z-index: 11;
 }
 
 .widget-content {

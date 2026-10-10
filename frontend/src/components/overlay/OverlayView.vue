@@ -38,6 +38,10 @@ onMounted(() => {
         <OverlayGamepadsWidgetView v-if="gamepadsWidget?.enabled" :widget="gamepadsWidget" />
         <OverlayWebcamWidgetView v-if="webcamWidget?.enabled" :widget="webcamWidget" />
 
+        <div v-if="overlayStore.interactable" class="move-banner">
+            MODO MOVER · arrastra los cuadros · Ctrl+Alt+M para guardar
+        </div>
+
         <!-- Custom Widgets -->
         <template v-for="widget in overlayStore.customWidgets">
             <OverlayWidgetView v-if="widget.enabled" :widget="widget">
@@ -48,6 +52,22 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
+.move-banner {
+    position: fixed;
+    top: 56px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 14px;
+    background: rgba(255, 174, 0, 0.92);
+    color: #111;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: .04em;
+    border-radius: 6px;
+    z-index: 999;
+    pointer-events: none;
+}
+
 .overlay {
     position: fixed;
     inset: 0;

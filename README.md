@@ -2,7 +2,7 @@
 
 Overlay de **Phoenix Link** para ver información encima del juego sin estorbar.
 Es un fork de [Smash Glass](https://github.com/trybuchet/smash-glass) (de MickeyUK / Smash Soda), rediseñado para partidos de fútbol.
-El archivo sigue llamándose `SmashGlass.exe` para que Phoenix Link lo encuentre en `overlay\`.
+El archivo se llama `PhoenixGlass.exe` y Phoenix Link lo busca en `overlay\` (si solo encuentra el nombre antiguo `SmashGlass.exe`, también lo usa).
 
 ## Qué muestra (y qué no)
 
@@ -18,7 +18,7 @@ Atajos (los de siempre): `Ctrl+Alt+C` chat · `Ctrl+Alt+M` mover widgets · `Ctr
 ## Compilar
 
 1. Doble clic en `COMPILAR_OVERLAY.bat` (instala Go si falta).
-2. Copia `bin\SmashGlass.exe` a la carpeta `overlay` de Phoenix Link.
+2. Copia `bin\PhoenixGlass.exe` a la carpeta `overlay` de Phoenix Link.
 
 Si cambias la parte visual (`frontend/`): `cd frontend`, `npm ci`, `npm run build` y vuelve a compilar. La carpeta `frontend/dist` va incluida en el repositorio para que compilar solo necesite Go.
 
