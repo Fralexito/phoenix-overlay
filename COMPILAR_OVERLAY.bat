@@ -27,6 +27,11 @@ if not errorlevel 1 (
   wails3 generate syso -arch amd64 -icon build\windows\icon.ico -manifest build\windows\wails.exe.manifest -info build\windows\info.json -out wails_windows_amd64.syso >nul 2>nul
 )
 
+REM Sin wails3: el icono y el manifiesto se incrustan con rsrc (se descarga solo; si falla, compila igual sin icono)
+if not exist wails_windows_amd64.syso (
+  go run github.com/akavel/rsrc@v0.10.2 -arch amd64 -ico build\windows\icon.ico -manifest build\windows\wails.exe.manifest -o rsrc_windows_amd64.syso >nul 2>nul
+)
+
 go build -trimpath -buildvcs=false -ldflags="-w -s -H windowsgui" -o bin\PhoenixGlass.exe .
 if errorlevel 1 (
   echo.
