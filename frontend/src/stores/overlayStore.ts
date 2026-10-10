@@ -114,17 +114,22 @@ export const useOverlayStore = defineStore('overlayStore', () => {
      */
     async function init() {
 
-        await loadThemes();
-        await applyTheme(useConfigStore().app.overlay.theme);
-        await loadPlugins();
-        await handleHotkeys();
-        initDefaultWidgets();
+        // Cada paso va aparte: si uno falla (un tema o plugin dañado), el overlay arranca igual
+        const paso = async (nombre: string, fn: () => any) => {
+            try { await fn(); } catch (e) { console.error(`[overlay] ${nombre} falló`, e); }
+        };
+        await paso('temas', () => loadThemes());
+        await paso('tema', () => applyTheme(useConfigStore().app.overlay.theme));
+        await paso('plugins', () => loadPlugins());
+        await paso('atajos', () => handleHotkeys());
+        await paso('widgets', () => initDefaultWidgets());
 
         window.$eventBus.on('chat:new', (data: any) => {
+            if (!data?.message) return;
             const message = new ChatMessage();
-            message.user.id = data.user.id;
-            message.user.name = data.user.name;
-            message.content = data.message;
+            message.user.id = data.user?.id ?? -1;
+            message.user.name = data.user?.name ?? '';
+            message.content = String(data.message);
             message.createdAt = new Date();
             message.createdAtFormatted = message.formatCreatedAt();
             addChatMessage(message);
@@ -162,21 +167,23 @@ export const useOverlayStore = defineStore('overlayStore', () => {
         })
 
         window.$eventBus.on('guest:poll', (data: any) => {
-            guests.value = data.users.map(user => new User({
+            const users = Array.isArray(data?.users) ? data.users : [];
+            guests.value = users.map((user: any) => new User({
                 id: user.id,
                 name: user.name,
-                latency: user.latency.toFixed(0)
+                latency: Math.round(Number(user.latency) || 0)
             }));
         })
 
         window.$eventBus.on('gamepad:poll', (data: any) => {
-            pads.value = data.gamepads.map(pad => new Pad({
-                buttons: pad.buttons.map(button => ({
+            const lista = Array.isArray(data?.gamepads) ? data.gamepads : [];
+            pads.value = lista.map((pad: any) => new Pad({
+                buttons: (Array.isArray(pad.buttons) ? pad.buttons : []).map((button: any) => ({
                     pressed: button,
                     touched: button,
                     value: button
                 })),
-                axes: pad.axes,
+                axes: pad.axes ?? [],
                 owner: pad.owner ? {
                     id: "",
                     name: pad.owner.name
@@ -237,7 +244,8 @@ export const useOverlayStore = defineStore('overlayStore', () => {
         const loadedPlugins = await LoadPlugins();
         const configStore = useConfigStore();
         
-        loadedPlugins.forEach(plugin => {
+        (loadedPlugins ?? []).forEach(plugin => {
+          try {
 
             // Skip plugins already loaded
             if (plugins.value.find(p => p.Meta.id === plugin.Meta.id)) {
@@ -289,6 +297,10 @@ export const useOverlayStore = defineStore('overlayStore', () => {
 
             window.$eventBus.emit(`plugin:loaded:${plugin.Meta.id}`, configStore.app.overlay.widgets.custom[plugin.Meta.name].cfg);
 
+          } catch (e) {
+            // Un plugin dañado no debe impedir que el overlay abra
+            console.error('[overlay] plugin falló', plugin?.Name, e);
+          }
         });
     }
 
@@ -561,10 +573,13 @@ export const useOverlayStore = defineStore('overlayStore', () => {
         const chatMessage = new ChatMessage(message);
 
         chatMessages.value.unshift(chatMessage);
+        // Sin tope, una sala larga llenaría la memoria con mensajes viejos
+        if (chatMessages.value.length > 200) chatMessages.value.length = 200;
 
         const chatBubble = new ChatBubble(message);
         chatBubble.id = nextChatBubbleId++;
         chatBubbles.value.unshift(chatBubble);
+        if (chatBubbles.value.length > 30) chatBubbles.value.length = 30;
         chatBubble.exitTimeout = setTimeout(() => {
             const bubble = chatBubbles.value.find(b => b.id === chatBubble.id);
             if (!bubble) return;
@@ -586,8 +601,10 @@ export const useOverlayStore = defineStore('overlayStore', () => {
      * @param message The message to send.
      */
     function sendMessage(message: string) {
+        const texto = String(message ?? '').trim().slice(0, 400);
+        if (!texto) return;
         const socketStore = useSocketStore();
-        socketStore.send('chat:send', message);
+        socketStore.send('chat:send', texto);
     }
 
     return {

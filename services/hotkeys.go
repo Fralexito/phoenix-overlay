@@ -11,6 +11,7 @@ import (
 type HotkeyService struct {
 	hotkeys map[string]*hotkey.Hotkey
 	events  map[string]string
+	defs    map[string]ChangeHotkeyArgs // last keys that worked, to put them back if a change fails
 	mu      sync.Mutex
 }
 
@@ -35,6 +36,7 @@ func NewHotkeyService() *HotkeyService {
 	return &HotkeyService{
 		hotkeys: make(map[string]*hotkey.Hotkey),
 		events:  make(map[string]string),
+		defs:    make(map[string]ChangeHotkeyArgs),
 	}
 }
 
@@ -43,6 +45,13 @@ func NewHotkeyService() *HotkeyService {
 func (h *HotkeyService) RegisterHotkey(args RegisterHotkeyArgs) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
+
+	// Registered again (for example the page was reloaded): free the old one first,
+	// otherwise Windows refuses the same keys a second time.
+	if old, ok := h.hotkeys[args.Name]; ok {
+		old.Unregister()
+		delete(h.hotkeys, args.Name)
+	}
 
 	modifiers := mapModifiers(args.Modifiers)
 	key := mapKey(args.Key)
@@ -54,6 +63,7 @@ func (h *HotkeyService) RegisterHotkey(args RegisterHotkeyArgs) error {
 
 	h.hotkeys[args.Name] = hk
 	h.events[args.Name] = args.Event
+	h.defs[args.Name] = ChangeHotkeyArgs{Name: args.Name, Modifiers: args.Modifiers, Key: args.Key}
 
 	h.startListener(hk, args.Name, args.Event)
 
@@ -76,9 +86,18 @@ func (h *HotkeyService) ChangeHotkey(args ChangeHotkeyArgs) error {
 
 	newHK := hotkey.New(modifiers, key)
 	if err := newHK.Register(); err != nil {
+		// The new keys are taken by another program: put the old ones back so the shortcut keeps working
+		if old, ok := h.defs[args.Name]; ok {
+			restored := hotkey.New(mapModifiers(old.Modifiers), mapKey(old.Key))
+			if restored.Register() == nil {
+				h.hotkeys[args.Name] = restored
+				h.startListener(restored, args.Name, h.events[args.Name])
+			}
+		}
 		return err
 	}
 
+	h.defs[args.Name] = args
 	h.hotkeys[args.Name] = newHK
 	h.startListener(newHK, args.Name, h.events[args.Name])
 
@@ -95,6 +114,7 @@ func (h *HotkeyService) UnregisterAll() {
 
 	h.hotkeys = make(map[string]*hotkey.Hotkey)
 	h.events = make(map[string]string)
+	h.defs = make(map[string]ChangeHotkeyArgs)
 }
 
 // ---- Internal helpers (NOT exported) ----

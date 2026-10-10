@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"image"
-	"image/color"
 	"image/jpeg"
 	"sort"
 	"syscall"
@@ -88,8 +87,14 @@ func NewWindowService(windowMode bool) *WindowService {
 	return ws
 }
 
-// GetMonitors retrieves the list of monitors connected to the system.
+// GetMonitors retrieves the list of monitors connected to the system (with a small preview of each one).
 func (ws *WindowService) GetMonitors() []Monitor {
+	return ws.listMonitors(true)
+}
+
+// listMonitors enumerates the monitors. The preview (a screenshot of each screen) is slow, so it is
+// only taken when the config screen asks for it, never at startup.
+func (ws *WindowService) listMonitors(withPreview bool) []Monitor {
 
 	var monitors []Monitor
 	//var primaryMonitor Monitor
@@ -109,13 +114,20 @@ func (ws *WindowService) GetMonitors() []Monitor {
 			x := int(mi.RcMonitor.Left)
 			y := int(mi.RcMonitor.Top)
 
-			// Get the device name
-			deviceName := fmt.Sprintf("[%d] %dx%d", len(monitors)+1, width, height)
+			// Get the device name (the number is set after sorting, below)
+			deviceName := fmt.Sprintf("%dx%d", width, height)
+			if mi.DwFlags&1 != 0 { // MONITORINFOF_PRIMARY
+				deviceName += " (principal)"
+			}
 
 			// Get a preview of the monitor
-			preview, err := ws.captureMonitorPreview(x, y, width, height)
-			if err != nil {
-				fmt.Println("Preview error:", err)
+			preview := ""
+			if withPreview {
+				var err error
+				preview, err = ws.captureMonitorPreview(x, y, width, height)
+				if err != nil {
+					fmt.Println("Preview error:", err)
+				}
 			}
 
 			// Create a Monitor struct
@@ -129,9 +141,6 @@ func (ws *WindowService) GetMonitors() []Monitor {
 			}
 
 			monitors = append(monitors, monitor)
-
-			// Print monitor details
-			fmt.Printf("Monitor %d: %s (%dx%d) at (%d, 0)\n", len(monitors), deviceName, width, height, x)
 		}
 		return 1 // Continue enumeration
 	}
@@ -147,6 +156,11 @@ func (ws *WindowService) GetMonitors() []Monitor {
 		return monitors[i].X < monitors[j].X
 	})
 
+	// The number shown to the user is the position in this sorted list (the same one the config uses)
+	for i := range monitors {
+		monitors[i].Name = fmt.Sprintf("[%d] %s", i+1, monitors[i].Name)
+	}
+
 	return monitors
 
 }
@@ -154,6 +168,9 @@ func (ws *WindowService) GetMonitors() []Monitor {
 // captureMonitorPreview captures a preview image of the monitor using GDI.
 func (ws *WindowService) captureMonitorPreview(x, y, width, height int) (string, error) {
 	win := ws.winapi
+	if width <= 0 || height <= 0 {
+		return "", fmt.Errorf("invalid monitor size")
+	}
 
 	// Get screen device context
 	hdcScreen, _, _ := win.getDC.Call(0)
@@ -204,16 +221,20 @@ func (ws *WindowService) captureMonitorPreview(x, y, width, height int) (string,
 		uintptr(unsafe.Pointer(&buf[0])), uintptr(unsafe.Pointer(&bi)), 0)
 
 	if ret == 0 {
+		win.deleteObject.Call(hbm)
+		win.deleteDC.Call(hdcMem)
+		win.releaseDC.Call(0, hdcScreen)
 		return "", fmt.Errorf("GetDIBits failed")
 	}
 
-	// Convert raw BGRA bytes to RGBA
+	// Convert raw BGRA bytes to RGBA. The screen copy has no alpha, so it is forced to opaque
+	// (otherwise the preview comes out black). Direct copy: far faster than setting pixel by pixel.
 	rgba := image.NewRGBA(image.Rect(0, 0, width, height))
-	for i := 0; i < len(buf); i += 4 {
-		y := (i / 4) / width
-		x := (i / 4) % width
-		b, g, r, a := buf[i], buf[i+1], buf[i+2], buf[i+3]
-		rgba.Set(x, y, color.NRGBA{R: r, G: g, B: b, A: a})
+	for i := 0; i+3 < len(buf) && i+3 < len(rgba.Pix); i += 4 {
+		rgba.Pix[i] = buf[i+2]
+		rgba.Pix[i+1] = buf[i+1]
+		rgba.Pix[i+2] = buf[i]
+		rgba.Pix[i+3] = 255
 	}
 
 	// Cleanup GDI
@@ -256,18 +277,26 @@ func (ws *WindowService) Focus() {
 }
 
 func (ws *WindowService) GetResolution() (int, int) {
-	monitor := ws.GetMonitors()[0]
-	return monitor.Width, monitor.Height
+	monitors := ws.listMonitors(false)
+	if len(monitors) == 0 {
+		return 1920, 1080
+	}
+	return monitors[0].Width, monitors[0].Height
 }
 
 // Reset has default value of false
 func (ws *WindowService) MoveMainWindowToMonitor(index int) {
 
-	// Get the list of monitors
-	monitors := ws.GetMonitors()
-	if index < 0 || index >= len(monitors) {
-		fmt.Println("Invalid monitor index")
+	// Get the list of monitors (no previews: this runs at every startup)
+	monitors := ws.listMonitors(false)
+	if len(monitors) == 0 {
+		fmt.Println("No monitors found")
 		return
+	}
+	// A saved monitor that is no longer connected falls back to the first one
+	if index < 0 || index >= len(monitors) {
+		fmt.Println("Invalid monitor index, using the first one")
+		index = 0
 	}
 
 	monitor := monitors[index]
@@ -302,7 +331,7 @@ func (ws *WindowService) CreateStudioWindow() {
 
 	// Create a new studio window
 	StudioWindow = WailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:                      "Smash Soda Studio",
+		Title:                      "Phoenix Overlay Studio",
 		URL:                        "/?mode=studio",
 		Zoom:                       1,
 		Width:                      1280,
@@ -329,7 +358,7 @@ func (ws *WindowService) CreateHeadlessWindow() {
 
 	// Create a new overlay window
 	HeadlessWindow = WailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:                      "Smash Soda Headless",
+		Title:                      "Phoenix Overlay Headless",
 		BackgroundType:             application.BackgroundTypeTransparent,
 		BackgroundColour:           application.NewRGBA(0, 0, 0, 0),
 		URL:                        "/?mode=headless",

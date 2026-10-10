@@ -22,9 +22,14 @@ func NewDiscordService(clientId string) *DiscordService {
 // Start rich presence thread
 func (ds *DiscordService) StartActivity(players int, game string, link string) {
 
+	// Sin Discord abierto (o sin identificador) no se puede mostrar nada: se ignora, nunca se cierra el overlay
+	if ds.clientId == "" {
+		return
+	}
 	err := client.Login(ds.clientId)
 	if err != nil {
-		panic(err)
+		fmt.Println("Discord not available:", err)
+		return
 	}
 
 	now := time.Now()

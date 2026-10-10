@@ -30,7 +30,10 @@ func NewFileService() *FileService {
 // GetFonts returns a list of unique font family names and their file paths
 // installed on the system.
 func (s *FileService) GetFonts() ([]FontInfo, error) {
-	fontDir := "C:\\Windows\\Fonts"
+	fontDir := filepath.Join(os.Getenv("WINDIR"), "Fonts")
+	if os.Getenv("WINDIR") == "" {
+		fontDir = "C:\\Windows\\Fonts"
+	}
 	fontMap := make(map[string]FontInfo) // Map to ensure unique font names
 
 	err := filepath.Walk(fontDir, func(path string, info os.FileInfo, err error) error {
@@ -46,6 +49,11 @@ func (s *FileService) GetFonts() ([]FontInfo, error) {
 			return nil
 		}
 
+		// Skip huge font files (CJK collections): they are slow to read and not useful here
+		if info.Size() > 40*1024*1024 {
+			return nil
+		}
+
 		fontBytes, err := ioutil.ReadFile(path)
 		if err != nil {
 			return nil
@@ -57,11 +65,6 @@ func (s *FileService) GetFonts() ([]FontInfo, error) {
 		}
 
 		// Use sfnt.NameIDFamily (ID 1) for the primary font family name
-		fmt.Println(f.Name(nil, sfnt.NameIDFamily))
-		fmt.Println(f.Name(nil, sfnt.NameIDCompatibleFull))
-		fmt.Println(f.Name(nil, sfnt.NameIDFull))
-		fmt.Println(f.Name(nil, sfnt.NameIDPostScript))
-		fmt.Println(f.Name(nil, sfnt.NameIDTypographicFamily))
 		name, err := f.Name(nil, sfnt.NameIDCompatibleFull)
 		if err != nil || name == "" {
 			// Fallback to sfnt.NameIDFull (ID 4) if family name is not available

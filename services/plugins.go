@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 )
 
 type Plugin struct {
@@ -37,14 +39,22 @@ func (s *PluginService) DownloadPlugin(pluginID string, files []string) error {
 		return err
 	}
 
-	pluginDir := filepath.Join(execDir, "plugins", pluginID)
+	pluginsDir := filepath.Join(execDir, "plugins")
+	pluginDir, err := safeJoin(pluginsDir, pluginID)
+	if err != nil || pluginDir == filepath.Clean(pluginsDir) {
+		return fmt.Errorf("invalid plugin id: %s", pluginID)
+	}
 	if err := os.MkdirAll(pluginDir, os.ModePerm); err != nil {
 		return err
 	}
 
 	for _, file := range files {
 		url := fmt.Sprintf("%s/%s/%s", s.rawBaseURL, pluginID, file)
-		dst := filepath.Join(pluginDir, file)
+		// The file names come from a remote list: never let one write outside the plugin folder
+		dst, err := safeJoin(pluginDir, file)
+		if err != nil {
+			return err
+		}
 
 		if err := downloadFile(url, dst); err != nil {
 			if err == errNotFound {
@@ -142,7 +152,10 @@ func (s *PluginService) DeletePlugin(pluginId string) error {
 	}
 
 	pluginsDir := filepath.Join(dir, "plugins")
-	pluginPath := filepath.Join(pluginsDir, pluginId)
+	pluginPath, err := safeJoin(pluginsDir, pluginId)
+	if err != nil || pluginPath == filepath.Clean(pluginsDir) {
+		return fmt.Errorf("invalid plugin id: %s", pluginId)
+	}
 
 	if err := os.RemoveAll(pluginPath); err != nil {
 		return fmt.Errorf("error deleting plugin: %w", err)
@@ -153,8 +166,21 @@ func (s *PluginService) DeletePlugin(pluginId string) error {
 
 var errNotFound = fmt.Errorf("not found")
 
+// A download that never answers must not freeze the overlay
+var httpClient = &http.Client{Timeout: 20 * time.Second}
+
+// safeJoin joins a relative path to a base folder and refuses anything that escapes it (.., absolute paths).
+func safeJoin(base, rel string) (string, error) {
+	cleanBase := filepath.Clean(base)
+	joined := filepath.Clean(filepath.Join(cleanBase, rel))
+	if joined != cleanBase && !strings.HasPrefix(joined, cleanBase+string(os.PathSeparator)) {
+		return "", fmt.Errorf("unsafe path: %s", rel)
+	}
+	return joined, nil
+}
+
 func downloadFile(url, filePath string) error {
-	resp, err := http.Get(url)
+	resp, err := httpClient.Get(url)
 	if err != nil {
 		return err
 	}

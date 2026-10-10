@@ -33,15 +33,19 @@ async function initApp() {
     const overlayStore = useOverlayStore()
     const socketStore = useSocketStore()
 
-    await configStore.init();
-    await socketStore.init();
-    await overlayStore.init();
+    // Si un paso falla, el overlay abre igual (con lo que sí funcione)
+    const seguro = async (nombre: string, fn: () => Promise<any>) => {
+        try { await fn(); } catch (e) { console.error(`[overlay] ${nombre} falló`, e); }
+    };
+    await seguro('config', () => configStore.init());
+    await seguro('socket', () => socketStore.init());
+    await seguro('overlay', () => overlayStore.init());
 
     // Dialog windows
     window.$dialog = dialog;
 
     // Move to the default monitor
-    MoveMainWindowToMonitor(configStore.app.overlay.display);
+    Promise.resolve(MoveMainWindowToMonitor(configStore.app.overlay.display)).catch(() => { });
 
     app.mount('#smashglass')
 }

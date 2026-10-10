@@ -15,6 +15,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/wailsapp/wails/v3/pkg/application"
+	"golang.org/x/sys/windows"
 )
 
 //go:embed all:frontend/dist
@@ -25,6 +26,13 @@ func init() {
 }
 
 func main() {
+
+	// Una sola copia a la vez: si Phoenix Link lo abre dos veces, la segunda sale sin hacer ruido
+	// (dos copias se pelearían por los atajos de teclado y por la pantalla).
+	if _, err := windows.CreateMutex(nil, false, windows.StringToUTF16Ptr("Local\\PhoenixGlass.Singleton")); err == windows.ERROR_ALREADY_EXISTS {
+		fmt.Println("PhoenixGlass ya está abierto; esta copia se cierra.")
+		return
+	}
 
 	mode := "overlay"
 	serverMode := "false"
@@ -123,7 +131,7 @@ func main() {
 		Width:                      width,
 		Height:                     height,
 		ZoomControlEnabled:         true,
-		DefaultContextMenuDisabled: false,
+		DefaultContextMenuDisabled: true,
 		AlwaysOnTop:                !(windowMode == "true"),
 		IgnoreMouseEvents:          !(windowMode == "true"),
 		DevToolsEnabled:            true,

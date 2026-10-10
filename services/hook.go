@@ -100,5 +100,9 @@ func (hs *HookService) StartWatchingFocus(windowName string) error {
 }
 
 func (hs *HookService) StopWatchingFocus() {
-	stopMonitoringChan <- true
+	// Never blocks: if nothing is being watched, there is nothing to stop
+	select {
+	case stopMonitoringChan <- true:
+	default:
+	}
 }

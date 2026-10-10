@@ -22,7 +22,11 @@ app.mount('#smashglass');
 const esc = new URLSearchParams(location.search).get('esc') || 'todo';
 const bus = (window as any).$eventBus;
 const users = (a: [string, number][]) => ({ users: a.map(([name, latency], i) => ({ id: i + 1, name, latency })) });
-if (esc === 'ok') {
+if (esc === 'ws') {
+  // Prueba de reconexión: se conecta a ws://localhost:9002 (el servidor de prueba puede abrir tarde)
+  const { useSocketStore } = await import('@/stores/socketStore');
+  useSocketStore().connect();
+} else if (esc === 'ok') {
   bus.emit('guest:poll', users([['Mirko', 18], ['Kaiser', 24], ['Zurdo10', 34]]));
 } else if (esc === 'lag') {
   bus.emit('guest:poll', users([['Mirko', 18], ['ElTigre', 87], ['Zurdo10', 164], ['Kaiser', 41]]));
