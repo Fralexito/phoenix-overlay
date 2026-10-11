@@ -549,6 +549,19 @@ export const useOverlayStore = defineStore('overlayStore', () => {
                 cfg: { ...tickerWidget.cfg, ...tickerCfg.cfg }
             });
 
+            // Phoenix: tamaños rotos guardados por una versión anterior (recuadros encogidos a 50 px
+            // al arrancar con la ventana sin medir) vuelven a los de fábrica.
+            const fabrica: Record<string, { w: number, h: number }> = {
+                chat: new ChatWidget().position, guests: new GuestsWidget().position,
+                ticker: new TickerWidget().position, gamepads: new GamepadsWidget().position,
+            };
+            for (const w of [chatWidget, guestsWidget, tickerWidget, gamepadsWidget]) {
+                const f = fabrica[w.name];
+                if (f && w.position.position !== 'custom' && !w.position.autoWidth && w.position.w < f.w * 0.6) {
+                    w.position.w = f.w;
+                }
+            }
+
             widgets.value = [chatWidget, guestsWidget, tickerWidget, gamepadsWidget];
 
             // Enable webcam?

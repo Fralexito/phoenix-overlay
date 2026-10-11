@@ -27,8 +27,16 @@ function getViewportSize() {
     };
 }
 
+// Phoenix: el tamaño de la ventana es reactivo. Al arrancar, la ventana del overlay puede medir 0
+// durante un instante: si la posición se calculaba entonces, los recuadros quedaban fuera de la
+// pantalla (x negativa) o encogidos a 50 px para siempre.
+const viewport = ref(getViewportSize());
+function alCambiarTamano() { viewport.value = getViewportSize(); }
+const VENTANA_LISTA = () => viewport.value.width >= 320 && viewport.value.height >= 240;
+
 function clampRect(x: number, y: number, w: number, h: number) {
     const viewport = getViewportSize();
+    if (viewport.width < 320 || viewport.height < 240) return { x, y, w, h };   // ventana aún sin medir: no recortar
     const clampedW = Math.min(Math.max(w, props.widget.position.minWidth || 1), viewport.width);
     const clampedH = Math.min(Math.max(h, props.widget.position.minHeight || 1), viewport.height);
     const maxX = viewport.width - clampedW;
@@ -69,8 +77,8 @@ if (props.widget.position.position === 'custom') {
 
 const style = computed(() => {
     const pos = props.widget.position;
-    const viewport = getViewportSize();
-    const { x, y } = props.widget.resolvePosition(viewport.width, viewport.height);
+    const vp = viewport.value;
+    const { x, y } = props.widget.resolvePosition(vp.width, vp.height);
 
     // Only use autoWidth/autoHeight if position is not 'custom'
     const useAuto = pos.position !== 'custom';
@@ -234,7 +242,15 @@ watch(
     }
 );
 
+watch(viewport, () => {
+    if (!VENTANA_LISTA()) return;
+    if (props.widget.position.position === 'custom') clampWidget();
+    else resizeToContent();
+});
+
 onMounted(() => {
+    window.addEventListener('resize', alCambiarTamano);
+    alCambiarTamano();
     if (props.widget.position.autoWidth || props.widget.position.autoHeight) {
         nextTick(resizeToContent);
 
@@ -250,6 +266,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+    window.removeEventListener('resize', alCambiarTamano);
     stopInteraction();
 });
 </script>
