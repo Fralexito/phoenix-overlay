@@ -3,6 +3,7 @@ import { createPinia } from 'pinia';
 import mitt from 'mitt';
 import '@/styles/css/legacy.css';
 import '@/styles/css/phoenix.css';
+import '@/styles/css/phoenix-futbol.css';
 import App from '@/components/App.vue'
 import * as ConfirmDialog from 'vuejs-confirm-dialog';
 import form from '@/components/form';
@@ -26,6 +27,20 @@ if (esc === 'ws') {
   // Prueba de reconexión: se conecta a ws://localhost:9002 (el servidor de prueba puede abrir tarde)
   const { useSocketStore } = await import('@/stores/socketStore');
   useSocketStore().connect();
+} else if (esc === 'futbol') {
+  // Marcador + gol + panel de amigos (?esc=futbol&fase=en_juego|descanso|final&panel=1)
+  const q = new URLSearchParams(location.search);
+  const fase = q.get('fase') || 'en_juego';
+  const goles = [{ m: 12, l: true, j: 'MESSI' }, { m: 34, l: false, j: 'VINICIUS' }, { m: 67, l: true, j: 'DE BRUYNE' }];
+  bus.emit('phoenix:partido', { fase, minuto: fase === 'descanso' ? 45 : fase === 'final' ? 90 : 67, segundo: 10, anadido: 0, periodo: 2, reloj: true,
+    local: { nombre: 'Fralex', goles: 2 }, visita: { nombre: 'ElTigre', goles: 1 }, goles });
+  bus.emit('phoenix:amigos', { cargados: true, salaAbierta: q.get('sala') !== '0', lista: [
+    { usuarioId: 'a1', nombre: 'Mirko', estado: 'en_partida' }, { usuarioId: 'a2', nombre: 'Kaiser', estado: 'en_sala' },
+    { usuarioId: 'a3', nombre: 'Zurdo10', estado: 'disponible' }, { usuarioId: 'a4', nombre: 'Lalo', estado: 'disponible' },
+    { usuarioId: 'a5', nombre: 'Nico', estado: 'ausente' }, { usuarioId: 'a6', nombre: 'Pepe', estado: 'desconectado' }] });
+  if (q.get('panel') === '1') ov.abrirPanelAmigos();
+  if (q.get('gol') === '1') setTimeout(() => bus.emit('phoenix:partido', { fase: 'en_juego', minuto: 78, segundo: 0, anadido: 0, periodo: 2, reloj: true,
+    local: { nombre: 'Fralex', goles: 3 }, visita: { nombre: 'ElTigre', goles: 1 }, goles: [...goles, { m: 78, l: true, j: 'HAALAND' }] }), 1500);
 } else if (esc === 'ok') {
   bus.emit('guest:poll', users([['Mirko', 18], ['Kaiser', 24], ['Zurdo10', 34]]));
 } else if (esc === 'lag') {

@@ -21,6 +21,7 @@ import User from '@/models/User';
 import ChatMessage from '@/models/chat/ChatMessage';
 import ChatBubble from '@/models/chat/ChatBubble';
 import Pad from '@/models/Pad';
+import type { PartidoOverlay, AmigoOverlay } from '@/models/Phoenix';
 
 import { useSocketStore } from './socketStore';
 import { useConfigStore } from './configStore';
@@ -42,6 +43,19 @@ export const useOverlayStore = defineStore('overlayStore', () => {
      * Noticias de "última hora" que manda Phoenix Link (máximo 5).
      */
     const ticker = ref<{ id: string | number; texto: string; nivel: string }[]>([]);
+
+    /**
+     * Marcador del partido que Link lee del juego (null = no hay partido que mostrar).
+     */
+    const partido = ref<PartidoOverlay | null>(null);
+
+    /**
+     * Amigos de la web (presencia) y panel desplegable para invitarlos sin salir del juego.
+     */
+    const amigos = ref<{ cargados: boolean; salaAbierta: boolean; lista: AmigoOverlay[] }>({ cargados: false, salaAbierta: false, lista: [] });
+    const panelAmigos = ref(false);
+    const invitaciones = ref<Record<string, { estado: 'enviando' | 'ok' | 'error'; mensaje: string }>>({});
+    let latidoPanel: number | undefined;
 
     /**
      * The widgets to be displayed on the overlay.
@@ -151,6 +165,40 @@ export const useOverlayStore = defineStore('overlayStore', () => {
                 .filter((i: any) => i && i.texto)
                 .slice(0, 5)
                 .map((i: any) => ({ id: i.id ?? i.texto, texto: String(i.texto), nivel: i.nivel === 'urgente' || i.nivel === 'importante' ? i.nivel : 'info' }));
+        })
+
+        // Phoenix: marcador en vivo del partido (fase «libre» = nada que mostrar)
+        window.$eventBus.on('phoenix:partido', (data: any) => {
+            if (!data || !data.local || !data.visita || data.fase === 'libre') { partido.value = null; return; }
+            partido.value = {
+                fase: String(data.fase || 'en_juego'),
+                minuto: Number(data.minuto) || 0,
+                segundo: Number(data.segundo) || 0,
+                anadido: Number(data.anadido) || 0,
+                periodo: Number(data.periodo) || 0,
+                reloj: data.reloj !== false,
+                local: { nombre: String(data.local.nombre || 'Local'), goles: Number(data.local.goles) || 0 },
+                visita: { nombre: String(data.visita.nombre || 'Visita'), goles: Number(data.visita.goles) || 0 },
+                goles: Array.isArray(data.goles) ? data.goles.slice(0, 40).map((g: any) => ({ m: Number(g.m) || 0, l: !!g.l, j: g.j ? String(g.j) : undefined, pp: !!g.pp })) : []
+            };
+        })
+
+        // Phoenix: amigos de la web para el panel desplegable
+        window.$eventBus.on('phoenix:amigos', (data: any) => {
+            const lista = Array.isArray(data?.lista) ? data.lista : [];
+            amigos.value = {
+                cargados: !!data?.cargados,
+                salaAbierta: !!data?.salaAbierta,
+                lista: lista.filter((a: any) => a && a.usuarioId && a.nombre).map((a: any) => ({ usuarioId: String(a.usuarioId), nombre: String(a.nombre), estado: String(a.estado || 'desconectado') }))
+            };
+        })
+
+        // Phoenix: respuesta de Link a una invitación pedida desde el panel
+        window.$eventBus.on('phoenix:invitacion', (data: any) => {
+            const id = String(data?.usuarioId || '');
+            if (!id) return;
+            invitaciones.value = { ...invitaciones.value, [id]: { estado: data.ok ? 'ok' : 'error', mensaje: String(data.mensaje || '') } };
+            window.setTimeout(() => { const { [id]: _quitar, ...resto } = invitaciones.value; invitaciones.value = resto; }, 9000);
         })
 
         // Phoenix: mensajes del chat general de la liga (el mismo de la web)
@@ -452,6 +500,8 @@ export const useOverlayStore = defineStore('overlayStore', () => {
             }
         });
 
+        Events.On('hotkey:amigos', () => alternarPanelAmigos());
+
         Events.On('hotkey:move', () => {
             if (locked.value) return;
             interactable.value = !interactable.value;
@@ -621,7 +671,58 @@ export const useOverlayStore = defineStore('overlayStore', () => {
         socketStore.send('chat:send', texto);
     }
 
+    /**
+     * Panel de amigos (atajo Shift+| o Ctrl+Alt+A): se abre encima del juego, captura el ratón para
+     * poder pulsar «Invitar» y lo suelta al cerrar. Mientras está abierto avisa a Link cada 4 s para que
+     * sondee los amigos aunque su ventana no se vea.
+     */
+    function avisarPanel(abierto: boolean) {
+        try { useSocketStore().send('phoenix:panel', { abierto }); } catch (e) { /* sin conexión: no pasa nada */ }
+    }
+
+    function abrirPanelAmigos() {
+        if (locked.value || interactable.value || panelAmigos.value) return;
+        panelAmigos.value = true;
+        Focus();
+        avisarPanel(true);
+        window.clearInterval(latidoPanel);
+        latidoPanel = window.setInterval(() => avisarPanel(true), 4000);
+    }
+
+    function cerrarPanelAmigos() {
+        if (!panelAmigos.value) return;
+        panelAmigos.value = false;
+        window.clearInterval(latidoPanel);
+        latidoPanel = undefined;
+        avisarPanel(false);
+        Blur();
+    }
+
+    function alternarPanelAmigos() {
+        if (panelAmigos.value) cerrarPanelAmigos(); else abrirPanelAmigos();
+    }
+
+    function invitarAmigo(usuarioId: string) {
+        if (invitaciones.value[usuarioId]?.estado === 'enviando') return;
+        invitaciones.value = { ...invitaciones.value, [usuarioId]: { estado: 'enviando', mensaje: '' } };
+        useSocketStore().send('phoenix:invitar', { usuarioId });
+        // Si Link no contesta en 20 s se avisa en vez de quedarse esperando
+        window.setTimeout(() => {
+            if (invitaciones.value[usuarioId]?.estado === 'enviando') {
+                invitaciones.value = { ...invitaciones.value, [usuarioId]: { estado: 'error', mensaje: 'Link no contestó. Prueba de nuevo.' } };
+            }
+        }, 20000);
+    }
+
     return {
+        partido,
+        amigos,
+        panelAmigos,
+        invitaciones,
+        abrirPanelAmigos,
+        cerrarPanelAmigos,
+        alternarPanelAmigos,
+        invitarAmigo,
         widgets,
         themes,
         customWidgets,

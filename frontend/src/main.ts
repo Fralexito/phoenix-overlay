@@ -3,6 +3,7 @@ import { createPinia } from 'pinia';
 import mitt from 'mitt';
 import '@/styles/css/legacy.css';
 import '@/styles/css/phoenix.css';
+import '@/styles/css/phoenix-futbol.css';
 
 import { MoveMainWindowToMonitor } from '@bindings/windowservice';
 

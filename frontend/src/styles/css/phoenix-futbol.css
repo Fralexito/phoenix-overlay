@@ -1,0 +1,125 @@
+/* ==========================================================================
+   Phoenix Overlay · fútbol
+   - Marcador de partido y cartel de gol (abajo al centro, pequeño, solo cuando aporta).
+   - Panel de amigos (Shift + | o Ctrl + Alt + A) para invitar sin salir del juego.
+   ========================================================================== */
+:root {
+  --pf-cesped: #2fe08a;
+  --pf-oro: #ffd24a;
+}
+
+/* ---------- Marcador y goles ---------- */
+.pf-marcador-zona {
+  position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  pointer-events: none; z-index: 20; max-width: 92vw;
+}
+.pf-marcador {
+  min-width: 360px; max-width: 640px;
+  padding: 7px 18px 8px;
+  background: linear-gradient(180deg, rgba(10, 16, 40, .9), rgba(6, 10, 26, .86));
+  border: 1px solid var(--ph-line);
+  border-bottom: 2px solid var(--pf-cesped);
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .5);
+  color: var(--color-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.pf-marcador.fase-final { border-bottom-color: var(--pf-oro); }
+.pf-marcador.fase-descanso, .pf-marcador.fase-pausado { border-bottom-color: var(--ph-mid); }
+.pf-fila { display: grid; grid-template-columns: 1fr auto 1fr auto; align-items: center; column-gap: 14px; }
+.pf-eq { font-weight: 700; font-size: 16px; letter-spacing: .04em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-eq-l { text-align: right; }
+.pf-eq-v { text-align: left; }
+.pf-goles { display: inline-flex; align-items: center; gap: 8px; padding: 1px 14px; border-radius: 8px; background: rgba(255, 255, 255, .07); }
+.pf-goles b { font-size: 26px; font-weight: 800; line-height: 1.15; }
+.pf-goles i { font-style: normal; color: var(--color-quaternary); font-size: 18px; }
+.pf-min { display: inline-flex; align-items: center; gap: 6px; min-width: 64px; justify-content: flex-end; font-size: 14px; font-weight: 800; letter-spacing: .08em; color: var(--pf-cesped); }
+.pf-min.pausa, .fase-descanso .pf-min { color: var(--ph-mid); }
+.fase-final .pf-min { color: var(--pf-oro); }
+.pf-vivo { width: 7px; height: 7px; border-radius: 50%; background: var(--pf-cesped); box-shadow: 0 0 8px var(--pf-cesped); animation: ph-pulse 1.4s ease-in-out infinite; flex: none; }
+.pf-resumen { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(255, 255, 255, .14); font-size: 13px; color: var(--color-quaternary); }
+.pf-resumen em { font-style: normal; color: var(--color-secondary); font-weight: 600; }
+.pf-resumen .v em { color: var(--color-tertiary); }
+
+.pf-gol {
+  display: flex; align-items: center; gap: 14px;
+  padding: 8px 20px 8px 14px;
+  background: linear-gradient(90deg, rgba(47, 224, 138, .94), rgba(25, 200, 255, .9));
+  color: #04122a; border-radius: 14px;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, .5), 0 0 28px rgba(47, 224, 138, .5);
+}
+.pf-gol-ball { font-size: 30px; animation: pf-bote .7s ease-in-out 3; }
+.pf-gol-txt { display: flex; flex-direction: column; line-height: 1.1; }
+.pf-gol-txt b { font-size: 22px; font-weight: 900; letter-spacing: .08em; }
+.pf-gol-eq { font-weight: 800; font-size: 15px; text-transform: uppercase; }
+.pf-gol-quien { font-size: 13px; font-weight: 600; opacity: .85; }
+.pf-gol-res { font-size: 28px; font-weight: 900; padding-left: 14px; border-left: 2px solid rgba(4, 18, 42, .3); }
+
+.pf-marcador-enter-active, .pf-marcador-leave-active { transition: opacity .45s ease, transform .45s cubic-bezier(.2, .8, .2, 1); }
+.pf-marcador-enter-from, .pf-marcador-leave-to { opacity: 0; transform: translateY(14px); }
+.pf-gol-enter-active { animation: pf-gol-in .55s cubic-bezier(.2, 1.1, .3, 1) both; }
+.pf-gol-leave-active { transition: opacity .5s ease, transform .5s ease; }
+.pf-gol-leave-to { opacity: 0; transform: translateY(-10px) scale(.96); }
+@keyframes pf-gol-in { from { opacity: 0; transform: translateY(18px) scale(.8); } to { opacity: 1; transform: none; } }
+@keyframes pf-bote { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-9px) rotate(18deg); } }
+
+/* ---------- Panel de amigos ---------- */
+.pf-fondo {
+  position: fixed; inset: 0; z-index: 60;
+  background: radial-gradient(ellipse at 100% 50%, rgba(3, 8, 24, .72), rgba(3, 8, 24, .28) 62%, transparent);
+  display: flex; justify-content: flex-end; align-items: stretch;
+  pointer-events: auto;
+}
+.pf-panel {
+  width: 360px; max-width: 94vw; margin: 14px 14px 14px 0;
+  display: flex; flex-direction: column; min-height: 0;
+  background: linear-gradient(180deg, rgba(12, 18, 44, .96), rgba(7, 11, 28, .95));
+  border: 1px solid var(--ph-line); border-radius: 16px;
+  box-shadow: -10px 0 40px rgba(0, 0, 0, .55), 0 0 0 1px rgba(47, 224, 138, .08) inset;
+  color: var(--color-secondary); overflow: hidden;
+  font-family: var(--font-primary);
+}
+.pf-cab { position: relative; display: flex; align-items: center; gap: 12px; padding: 16px 16px 12px; background: linear-gradient(135deg, rgba(47, 224, 138, .18), rgba(25, 230, 255, .06) 60%, transparent); border-bottom: 1px solid rgba(255, 255, 255, .07); }
+.pf-cancha { width: 58px; height: 20px; flex: none; fill: none; stroke: var(--pf-cesped); stroke-width: 1.6; opacity: .75; }
+.pf-cab-txt { flex: 1; min-width: 0; }
+.pf-cab-txt h2 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: .2em; }
+.pf-cab-txt p { margin: 2px 0 0; display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--pf-cesped); }
+.pf-x { width: 30px; height: 30px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, .12); background: rgba(255, 255, 255, .05); color: var(--color-secondary); cursor: pointer; font-size: 14px; }
+.pf-x:hover { background: rgba(255, 77, 109, .25); border-color: rgba(255, 77, 109, .5); }
+.pf-aviso { margin: 10px 14px 0; padding: 8px 10px; border-radius: 8px; font-size: 13px; background: rgba(255, 176, 46, .12); border: 1px solid rgba(255, 176, 46, .4); color: var(--ph-mid); }
+.pf-busca { margin: 12px 14px 6px; padding: 9px 12px; border-radius: 9px; border: 1px solid var(--ph-line); background: rgba(5, 8, 22, .8); color: var(--color-secondary); font: inherit; font-size: 15px; outline: none; }
+.pf-busca:focus { border-color: var(--color-tertiary); box-shadow: 0 0 0 3px rgba(25, 230, 255, .14); }
+.pf-lista { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 8px 8px; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .2) transparent; }
+.pf-vacio { padding: 26px 16px; text-align: center; color: var(--color-quaternary); font-size: 14px; }
+.pf-grupo h3 { display: flex; justify-content: space-between; margin: 12px 8px 4px; font-size: 11px; font-weight: 800; letter-spacing: .16em; color: var(--color-quaternary); }
+.pf-grupo h3 span { font-variant-numeric: tabular-nums; }
+.pf-amigo { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 10px; }
+.pf-amigo:hover { background: rgba(255, 255, 255, .05); }
+.pf-av { position: relative; flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; background: linear-gradient(135deg, #1d2a5c, #101a3e); border: 1px solid rgba(255, 255, 255, .12); }
+.pf-av i { position: absolute; right: -1px; bottom: -1px; width: 11px; height: 11px; border-radius: 50%; border: 2px solid #0a1030; background: #5b6486; }
+.pf-amigo.act .pf-av i { background: var(--ph-ok); }
+.pf-amigo.sala .pf-av i { background: var(--color-tertiary); }
+.pf-amigo.jug .pf-av i { background: var(--pf-cesped); box-shadow: 0 0 8px var(--pf-cesped); }
+.pf-amigo.aus .pf-av i { background: var(--ph-mid); }
+.pf-amigo.off { opacity: .6; }
+.pf-nom { flex: 1; min-width: 0; display: flex; flex-direction: column; font-weight: 600; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-nom small { font-weight: 500; font-size: 12px; color: var(--color-quaternary); }
+.pf-inv { flex: none; padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(47, 224, 138, .55); background: rgba(47, 224, 138, .14); color: var(--pf-cesped); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer; }
+.pf-inv:hover:not(:disabled) { background: var(--pf-cesped); color: #04122a; }
+.pf-inv:disabled { opacity: .45; cursor: default; }
+.pf-ok { flex: none; font-size: 13px; font-weight: 700; color: var(--pf-cesped); }
+.pf-err { flex: none; max-width: 150px; font-size: 12px; color: var(--ph-bad); text-align: right; line-height: 1.15; }
+.pf-mas { display: block; width: calc(100% - 16px); margin: 10px 8px 2px; padding: 7px; border-radius: 8px; border: 1px dashed rgba(255, 255, 255, .18); background: none; color: var(--color-quaternary); font: inherit; font-size: 13px; cursor: pointer; }
+.pf-mas:hover { color: var(--color-secondary); border-color: rgba(255, 255, 255, .35); }
+.pf-pie { padding: 9px 14px; font-size: 12px; color: var(--color-quaternary); text-align: center; border-top: 1px solid rgba(255, 255, 255, .07); }
+.pf-pie kbd { padding: 1px 6px; border-radius: 5px; border: 1px solid rgba(255, 255, 255, .22); background: rgba(255, 255, 255, .07); font: inherit; font-size: 11px; }
+
+.pf-panel-enter-active, .pf-panel-leave-active { transition: opacity .22s ease; }
+.pf-panel-enter-active .pf-panel, .pf-panel-leave-active .pf-panel { transition: transform .28s cubic-bezier(.2, .8, .2, 1); }
+.pf-panel-enter-from, .pf-panel-leave-to { opacity: 0; }
+.pf-panel-enter-from .pf-panel, .pf-panel-leave-to .pf-panel { transform: translateX(40px); }
+@media (prefers-reduced-motion: reduce) {
+  .pf-gol-ball, .pf-vivo { animation: none !important; }
+  .pf-panel-enter-active .pf-panel, .pf-panel-leave-active .pf-panel { transition: none; }
+}

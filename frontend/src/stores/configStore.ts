@@ -177,6 +177,22 @@ export const useConfigStore = defineStore('configStore', () => {
             Key: app.value.hotkeys['hotkey:move'].key,
             Event: 'hotkey:move'
         });
+
+        // Panel de amigos del overlay: Shift + | (como el de Discord) y Ctrl + Alt + A de respaldo.
+        // La configuración vieja guardada en disco no trae estos atajos: se usan los de fábrica.
+        const hk = app.value.hotkeys as any;
+        await registerHotkey({
+            Name: 'hotkey:amigos',
+            Modifiers: hk['hotkey:amigos']?.modifiers ?? [16],
+            Key: hk['hotkey:amigos']?.key ?? 220,
+            Event: 'hotkey:amigos'
+        });
+        await registerHotkey({
+            Name: 'hotkey:amigos:alt',
+            Modifiers: hk['hotkey:amigos:alt']?.modifiers ?? [17, 18],
+            Key: hk['hotkey:amigos:alt']?.key ?? 65,
+            Event: 'hotkey:amigos'
+        });
     }
 
     /**
