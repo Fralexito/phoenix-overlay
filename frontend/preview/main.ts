@@ -14,7 +14,12 @@ import { useOverlayStore } from '@/stores/overlayStore';
 const app = createApp(App); app.use(createPinia()); app.use(ConfirmDialog);
 for (const k in form) app.component(k, (form as any)[k]);
 const cfg = useConfigStore(); const ov = useOverlayStore();
-cfg.app.overlay.zoom = 1;
+cfg.app.overlay.zoom = Number(new URLSearchParams(location.search).get('zoom')) || 1;
+if (cfg.app.overlay.zoom !== 1) {   // como applyOverlayZoom() del programa real
+  document.documentElement.style.setProperty('--ph-zoom', String(cfg.app.overlay.zoom));
+  document.body.style.transformOrigin = 'top left';
+  document.body.style.transform = `scale(${cfg.app.overlay.zoom})`;
+}
 (cfg as any).app.overlay.opacity = 1;
 await ov.init();
 app.mount('#smashglass');

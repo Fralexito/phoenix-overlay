@@ -110,6 +110,8 @@ export const useConfigStore = defineStore('configStore', () => {
         const zoom = Math.max(0.5, Math.min(1.5, Number(app.value.overlay.zoom) || 1));
         app.value.overlay.zoom = zoom;
 
+        // Para que lo que debe verse a tamaño real (panel de amigos) pueda deshacer este zoom
+        document.documentElement.style.setProperty('--ph-zoom', String(zoom));
         document.body.style.transformOrigin = 'top left';
         document.body.style.transform = `scale(${zoom})`;
     }

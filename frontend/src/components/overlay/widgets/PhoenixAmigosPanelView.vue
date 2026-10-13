@@ -38,6 +38,8 @@ watch(() => overlayStore.panelAmigos, (abierto) => {
 </script>
 
 <template>
+    <!-- Fuera de la caja del overlay (que se escala con el zoom y recorta lo que sobresale): así el panel sale a tamaño real y a pantalla completa -->
+    <Teleport to="html">
     <transition name="pf-panel">
         <div v-if="overlayStore.panelAmigos" class="pf-fondo" @mousedown.self="overlayStore.cerrarPanelAmigos()">
             <aside class="pf-panel" role="dialog" aria-label="Amigos">
@@ -88,4 +90,5 @@ watch(() => overlayStore.panelAmigos, (abierto) => {
             </aside>
         </div>
     </transition>
+    </Teleport>
 </template>
