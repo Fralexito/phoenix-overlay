@@ -188,7 +188,9 @@ export const useOverlayStore = defineStore('overlayStore', () => {
         // Phoenix: torneo al que pertenece el partido (los datos salen de /v1/torneos/partidos; vacío = partido libre)
         window.$eventBus.on('phoenix:torneo', (data: any) => {
             if (!data || !data.torneo) { torneo.value = null; return; }
-            torneo.value = { torneo: String(data.torneo).slice(0, 60), ronda: String(data.ronda || '').slice(0, 40), a: String(data.a || 'A').slice(0, 40), b: String(data.b || 'B').slice(0, 40) };
+            const nuevo = { torneo: String(data.torneo).slice(0, 60), ronda: String(data.ronda || '').slice(0, 40), a: String(data.a || 'A').slice(0, 40), b: String(data.b || 'B').slice(0, 40) };
+            // Link lo reenvía cada 5 s: si no cambió nada, no se toca (así la cinta no reaparece)
+            if (JSON.stringify(nuevo) !== JSON.stringify(torneo.value)) torneo.value = nuevo;
         })
 
         // Phoenix: amigos de la web para el panel desplegable
