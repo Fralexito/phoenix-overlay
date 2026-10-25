@@ -29,6 +29,8 @@ Si cambias la parte visual (`frontend/`): `cd frontend`, `npm ci`, `npm run buil
 ## Eventos nuevos por WebSocket (los manda Phoenix Link)
 
 - `phoenix:ticker` → `{ items: [{ id, texto, nivel: info|importante|urgente }] }`
+- `phoenix:partido` → marcador en vivo (ver `frontend/src/models/Phoenix.ts`). No se dibuja fijo: solo el cartel «¡GOOOL!» (7 s por gol) y, si hay torneo, la cinta del resultado final (10 s).
+- `phoenix:torneo` → `{ torneo, ronda, a, b }` (de `GET /v1/torneos/partidos`). Muestra la cinta «Copa · Ronda · A vs B» 8 s al empezar. Mandar `null` o sin `torneo` = partido libre.
 - `phoenix:chatgeneral` → `{ id, nombre, texto }`
 
 ## Licencia

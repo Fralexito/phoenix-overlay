@@ -48,6 +48,8 @@ export const useOverlayStore = defineStore('overlayStore', () => {
      * Marcador del partido que Link lee del juego (null = no hay partido que mostrar).
      */
     const partido = ref<PartidoOverlay | null>(null);
+    /** Torneo del partido en juego (phoenix:torneo); null = partido libre. */
+    const torneo = ref<{ torneo: string; ronda: string; a: string; b: string } | null>(null);
 
     /**
      * Amigos de la web (presencia) y panel desplegable para invitarlos sin salir del juego.
@@ -181,6 +183,12 @@ export const useOverlayStore = defineStore('overlayStore', () => {
                 visita: { nombre: String(data.visita.nombre || 'Visita'), goles: Number(data.visita.goles) || 0 },
                 goles: Array.isArray(data.goles) ? data.goles.slice(0, 40).map((g: any) => ({ m: Number(g.m) || 0, l: !!g.l, j: g.j ? String(g.j) : undefined, pp: !!g.pp })) : []
             };
+        })
+
+        // Phoenix: torneo al que pertenece el partido (los datos salen de /v1/torneos/partidos; vacío = partido libre)
+        window.$eventBus.on('phoenix:torneo', (data: any) => {
+            if (!data || !data.torneo) { torneo.value = null; return; }
+            torneo.value = { torneo: String(data.torneo).slice(0, 60), ronda: String(data.ronda || '').slice(0, 40), a: String(data.a || 'A').slice(0, 40), b: String(data.b || 'B').slice(0, 40) };
         })
 
         // Phoenix: amigos de la web para el panel desplegable
@@ -716,6 +724,7 @@ export const useOverlayStore = defineStore('overlayStore', () => {
 
     return {
         partido,
+        torneo,
         amigos,
         panelAmigos,
         invitaciones,
