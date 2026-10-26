@@ -11,6 +11,7 @@ import OverlayWebcamWidgetView from './widgets/OverlayWebcamWidgetView.vue';
 import OverlayTickerWidgetView from './widgets/OverlayTickerWidgetView.vue';
 import OverlayWidgetView from './OverlayWidgetView.vue';
 import PhoenixAmigosPanelView from './widgets/PhoenixAmigosPanelView.vue';
+import PhoenixPartidoAvisoView from './widgets/PhoenixPartidoAvisoView.vue';
 
 const overlayStore = useOverlayStore();
 const configStore = useConfigStore();
@@ -38,6 +39,7 @@ onMounted(() => {
         <OverlayTickerWidgetView v-if="tickerWidget?.enabled" :widget="tickerWidget" />
         <OverlayGamepadsWidgetView v-if="gamepadsWidget?.enabled" :widget="gamepadsWidget" />
         <OverlayWebcamWidgetView v-if="webcamWidget?.enabled" :widget="webcamWidget" />
+        <PhoenixPartidoAvisoView />
         <PhoenixAmigosPanelView />
 
         <div v-if="overlayStore.interactable" class="move-banner">

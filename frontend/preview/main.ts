@@ -43,6 +43,7 @@ if (esc === 'ws') {
     { usuarioId: 'a1', nombre: 'Mirko', estado: 'en_partida' }, { usuarioId: 'a2', nombre: 'Kaiser', estado: 'en_sala' },
     { usuarioId: 'a3', nombre: 'Zurdo10', estado: 'disponible' }, { usuarioId: 'a4', nombre: 'Lalo', estado: 'disponible' },
     { usuarioId: 'a5', nombre: 'Nico', estado: 'ausente' }, { usuarioId: 'a6', nombre: 'Pepe', estado: 'desconectado' }] });
+  if (q.get('torneo') === '1') bus.emit('phoenix:torneo', { torneo: 'Copa Relámpago', ronda: 'Cuartos', a: 'Fralex', b: 'ElTigre' });
   if (q.get('panel') === '1') ov.abrirPanelAmigos();
   if (q.get('gol') === '1') setTimeout(() => bus.emit('phoenix:partido', { fase: 'en_juego', minuto: 78, segundo: 0, anadido: 0, periodo: 2, reloj: true,
     local: { nombre: 'Fralex', goles: 3 }, visita: { nombre: 'ElTigre', goles: 1 }, goles: [...goles, { m: 78, l: true, j: 'HAALAND' }] }), 1500);
